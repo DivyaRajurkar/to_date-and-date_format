@@ -137,24 +137,33 @@ The `date_format` function allows you to format a `DateType` or `TimestampType` 
 ### Step 1: Create a DataFrame
 ```python
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import date_format, to_date
+from pyspark.sql.functions import to_date, date_format
 
-# Initialize SparkSession
-spark = SparkSession.builder.appName("DateFormat Example").getOrCreate()
+# Initialize Spark session
+spark = SparkSession.builder.appName("DateFormatting").getOrCreate()
 
-# Sample Data
-data = [("2025-01-09",), ("1970-01-01",), ("2000-12-31",)]
+# Sample data with a date string column
+data = [("2025-01-09",), ("2025-12-25",), ("2024-07-07",)]
 columns = ["date_string"]
-
-# Create DataFrame
 df = spark.createDataFrame(data, columns)
 
-# Convert string to DateType
+# Step 1: Convert 'date_string' to a DateType column
 df = df.withColumn("date", to_date("date_string", "yyyy-MM-dd"))
 
-# Show original DataFrame
-print("Original DataFrame:")
-df.show()
+# Step 2: Apply valid datetime patterns
+formatted_df = df.select(
+    "date",
+    date_format("date", "MMM").alias("Month (Short Name)"),   # Short month name
+    date_format("date", "MMMM").alias("Month (Full Name)"),  # Full month name
+    date_format("date", "E").alias("Day (Short Name)"),      # Short day name
+    date_format("date", "EEEE").alias("Day (Full Name)"),    # Full day name
+    date_format("date", "dd/MM/yyyy").alias("Custom Format") # Custom date format
+)
+
+# Step 3: Show the results
+print("Formatted DataFrame:")
+formatted_df.show(truncate=False)
+
 ```
 
 #### Output:
