@@ -100,5 +100,129 @@ In this example, `date_format` successfully formats the `formatted_date` column 
 - **`date_format`:** Converts `DateType` or `TimestampType` into a string with a custom format.
   - Use it for creating user-friendly, formatted outputs in reports or visualizations.
 
-Both functions are complementary and are often used together in ETL workflows for robust date handling.
+# Overview of `date_format`
+
+The `date_format` function allows you to format a `DateType` or `TimestampType` column into a string according to a specified pattern.
+
+## Syntax:
+```sql
+  date_format(date, format)
+```
+- `date`: A `DateType` or `TimestampType` column.
+- `format`: The desired output format (a string pattern).
+
+## Common Patterns for Formatting
+
+| Pattern  | Description               | Example   |
+|----------|---------------------------|-----------|
+| `y`      | Year                     | 2025      |
+| `M`      | Month in year (1-12)     | 1         |
+| `MM`     | Month in year (01-12)    | 01        |
+| `MMM`    | Month name short         | Jan       |
+| `MMMM`   | Month name full          | January   |
+| `d`      | Day of the month (1-31)  | 9         |
+| `dd`     | Day of the month (01-31) | 09        |
+| `E`      | Day name short           | Mon       |
+| `EEEE`   | Day name full            | Monday    |
+| `H`      | Hour in day (0-23)       | 14        |
+| `h`      | Hour in AM/PM (1-12)     | 2         |
+| `a`      | AM/PM marker             | PM        |
+| `m`      | Minute in hour (0-59)    | 30        |
+| `s`      | Second in minute (0-59)  | 45        |
+
+---
+
+## Example: Using `date_format` in PySpark
+
+### Step 1: Create a DataFrame
+```python
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import date_format, to_date
+
+# Initialize SparkSession
+spark = SparkSession.builder.appName("DateFormat Example").getOrCreate()
+
+# Sample Data
+data = [("2025-01-09",), ("1970-01-01",), ("2000-12-31",)]
+columns = ["date_string"]
+
+# Create DataFrame
+df = spark.createDataFrame(data, columns)
+
+# Convert string to DateType
+df = df.withColumn("date", to_date("date_string", "yyyy-MM-dd"))
+
+# Show original DataFrame
+print("Original DataFrame:")
+df.show()
+```
+
+#### Output:
+```
++-----------+----------+
+|date_string|      date|
++-----------+----------+
+| 2025-01-09|2025-01-09|
+| 1970-01-01|1970-01-01|
+| 2000-12-31|2000-12-31|
++-----------+----------+
+```
+
+---
+
+### Step 2: Apply `date_format` Function
+```python
+# Format the date into different string patterns
+formatted_df = df.select(
+    "date",
+    date_format("date", "LLL").alias("Month (Short Name)"),
+    date_format("date", "MMMM").alias("Month (Full Name)"),
+    date_format("date", "EEE").alias("Day (Short Name)"),
+    date_format("date", "EEEE").alias("Day (Full Name)"),
+    date_format("date", "dd/MM/yyyy").alias("Custom Format")
+)
+
+# Show formatted DataFrame
+print("Formatted DataFrame:")
+formatted_df.show()
+```
+
+#### Output:
+```
++----------+-----------------+----------------+----------------+--------------+-------------+
+|      date|Month (Short Name)|Month (Full Name)|Day (Short Name)|Day (Full Name)|Custom Format|
++----------+-----------------+----------------+----------------+--------------+-------------+
+|2025-01-09|              Jan|         January|             Thu|     Thursday |   09/01/2025|
+|1970-01-01|              Jan|         January|             Thu|     Thursday |   01/01/1970|
+|2000-12-31|              Dec|         December|             Sun|     Sunday   |   31/12/2000|
++----------+-----------------+----------------+----------------+--------------+-------------+
+```
+
+---
+
+## Explanation of the Example
+
+- `date_format("date", "LLL")`:
+  - Formats the date to display the short month name (e.g., Jan).
+
+- `date_format("date", "MMMM")`:
+  - Displays the full month name (e.g., January).
+
+- `date_format("date", "EEE")`:
+  - Displays the short name of the day (e.g., Thu for Thursday).
+
+- `date_format("date", "EEEE")`:
+  - Displays the full name of the day (e.g., Thursday).
+
+- `date_format("date", "dd/MM/yyyy")`:
+  - Custom format that displays the date in `dd/MM/yyyy` format (e.g., 09/01/2025).
+
+---
+
+## Key Points:
+
+- `date_format` is used to transform dates into string representations for better readability or specific formats.
+- It’s often used for generating reports or exporting data where dates need to be in a user-friendly format.
+- You can use it in conjunction with other date functions like `to_date` and `current_date`.
+
 
